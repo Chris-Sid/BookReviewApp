@@ -16,9 +16,11 @@ builder.Services.AddHttpClient("Api", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7141/");
 });
-
+var connectionString = Environment.GetEnvironmentVariable("BOOKREVIEW_DB_CONNECTION");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString ??
+                      throw new InvalidOperationException("DB connection string not set")));
+
 
 builder.Services.AddIdentity<AppUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()

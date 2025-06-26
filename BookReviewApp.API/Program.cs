@@ -54,9 +54,11 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
+var connectionString = Environment.GetEnvironmentVariable("BOOKREVIEW_DB_CONNECTION");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString ??
+                      throw new InvalidOperationException("DB connection string not set")));
+
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
