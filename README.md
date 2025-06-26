@@ -1,7 +1,7 @@
 
 # 📚 BookReviewApp
 
-An ASP.NET Core 9 web application that allows users to register/login, view/manage books, write reviews, and vote (like/dislike) on reviews. It includes both an MVC UI and a RESTful API with JWT authentication and PostgreSQL persistence.
+An ASP.NET Core 9 web application that allows users to register/login, view/manage books, write reviews, and vote (like/dislike) on reviews. It includes both an MVC UI and a RESTful API with JWT authentication and PostgreSQL persistence followin N-Tier architecture.
 
 ---
 
