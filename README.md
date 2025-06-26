@@ -41,16 +41,17 @@ docker run -d -p 5433:5432 --name bookreview-postgres \
 
 ### ⚙️ Setup Environment Variables
 
-You must set the following JWT configuration as **User environment variables**:
-
+You must set the following JWT & PostgreSQL database configuration as **User environment variables**:
+Run as Admin Powershell and type:
 ```powershell
+[System.Environment]::SetEnvironmentVariable("BOOKREVIEW_DB_CONNECTION", "Host=localhost;Port=5433;Database=bookreviewdb;Username=bookadmin;Password=SuperSecure123", "Machine")
 [System.Environment]::SetEnvironmentVariable("BookAPP_JWT_ISSUER", "test.gr", "User")
 [System.Environment]::SetEnvironmentVariable("BookAPP_JWT_AUDIENCE", "test", "User")
 [System.Environment]::SetEnvironmentVariable("BookAPP_JWT_KEY", "justADummyTokenKeyForDummyTest2025!", "User")
 [System.Environment]::SetEnvironmentVariable("BookAPP_JWT_EXPIRY_MINUTES", "60", "User")
 ```
 
-📌 Tip: Restart your IDE or terminal after setting them.
+📌 Tip: Restart your IDE or terminal after setting them or even Visual Studio so that it will work.
 
 ---
 
