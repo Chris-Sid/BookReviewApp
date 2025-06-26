@@ -1,0 +1,116 @@
+﻿@using BookReviewApp.Entities.Models
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@model BookReviewApp.Entities.Models.Book
+
+@{
+    ViewData["Title"] = Model.Title;
+    var userId = UserManager.GetUserId(User);
+    var isCustomer = User.IsInRole("Customer");
+    var isAdmin = User.IsInRole("Admin");
+    var userReview = Model.Reviews?.FirstOrDefault(r => r.UserId == userId);
+}
+
+<h2>@Model.Title</h2>
+<p><strong>Author:</strong> @Model.Author</p>
+<p><strong>Published:</strong> @Model.PublishedYear</p>
+<p><strong>Genre:</strong> @Model.Genre</p>
+
+<hr />
+
+<h4>Reviews</h4>
+
+@if (Model.Reviews == null || Model.Reviews.Count == 0)
+{
+    <div><h3>No reviews yet</h3></div>
+}
+
+@foreach (var review in Model.Reviews ?? new List<Review>())
+{
+    var userVote = review.Votes?.FirstOrDefault(v => v.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+    var hasVoted = review.Votes?.Any(v => v.UserId == userId) ?? false;
+
+    <div class="card mb-2 p-2">
+        <p>@review.Content</p>
+        <small>
+            Rating: @review.Rating |
+            By: @review.User?.UserName |
+            On: @review.DateCreated.ToShortDateString()
+        </small>
+        <div class="mt-1">
+            <form asp-action="Vote" asp-controller="Reviews" method="post" class="d-inline">
+                <input type="hidden" name="ReviewId" value="@review.Id" />
+                <input type="hidden" name="IsUpvote" value="true" />
+                <input type="hidden" name="BookID" value="@Model.Id" />
+                <button class="btn btn-sm btn-success" @(hasVoted ? "disabled" : "")>
+                    👍 @(review.Votes?.Count(v => v.IsUpvote) ?? 0)
+                </button>
+            </form>
+            <form asp-action="Vote" asp-controller="Reviews" method="post" class="d-inline">
+                <input type="hidden" name="ReviewId" value="@review.Id" />
+                <input type="hidden" name="IsUpvote" value="false" />
+                <button class="btn btn-sm btn-danger" @(hasVoted ? "disabled" : "")>
+                    👎 @(review.Votes?.Count(v => !v.IsUpvote) ?? 0)
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+@if (SignInManager.IsSignedIn(User) && (isCustomer || isAdmin))
+{
+    if (userReview != null)
+    {
+        <form asp-action="UpdateReview" method="post" asp-controller="Reviews">
+            <input type="hidden" name="Id" value="@userReview.Id" />
+            <input type="hidden" name="BookId" value="@Model.Id" />
+    
+            <div class="form-group">
+                <label>Rating</label>
+                <select name="Rating" class="form-control" required>
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <option value="@i" selected="@(i == userReview.Rating ? "selected" : null)">@i</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Content</label>
+                <textarea name="Content" class="form-control" required>@userReview.Content</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success mt-2">Update Review</button>
+        </form>
+
+    }
+    else
+    {
+        <hr />
+        <h5>Add a Review</h5>
+        <form asp-action="AddReview" method="post" asp-controller="Reviews">
+            <input type="hidden" name="BookId" value="@Model.Id" />
+            <div class="form-group">
+                <label>Rating</label>
+                <select name="Rating" class="form-control" required>
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <textarea name="Content" class="form-control" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
+        </form>
+    }
+}
+else
+{
+    <p class="text-muted mt-3">Only logged-in customers can leave reviews and votes.</p>
+}
+

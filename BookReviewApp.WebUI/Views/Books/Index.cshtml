@@ -1,0 +1,78 @@
+﻿@using BookReviewApp.Entities.Models
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@model IEnumerable<Book>
+<h2>Books</h2>
+
+<form asp-action="Index" method="get" class="row g-3 mb-4">
+    <div class="col">
+        <label>Genre</label>
+        <select name="genre" class="form-select">
+            <option value="">-- All --</option>
+            @foreach (var g in ViewBag.Genres as List<string>)
+            {
+                <option value="@g" selected="@(Context.Request.Query["genre"] == g ? "selected" : null)">@g</option>
+            }
+        </select>
+    </div>
+
+    <div class="col">
+        <label>Year</label>
+        <select name="year" class="form-select">
+            <option value="">-- All --</option>
+            @foreach (var y in ViewBag.Years as List<int>)
+            {
+                <option value="@y" selected="@(Context.Request.Query["year"] == y.ToString() ? "selected" : null)">@y</option>
+            }
+        </select>
+    </div>
+
+    <div class="col">
+        <label>Rating ≥</label>
+        <select name="rating" class="form-select">
+            <option value="">-- All --</option>
+            @foreach (var r in ViewBag.Ratings as List<int>)
+            {
+                <option value="@r" selected="@(Context.Request.Query["rating"] == r.ToString() ? "selected" : null)">@r</option>
+            }
+        </select>
+    </div>
+
+    <div class="col d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-action="Index" class="btn btn-secondary">Reset Filters</a>
+    </div>
+</form>
+
+
+<table class="table">
+    <thead>
+        <tr><th>Title</th><th>Author</th><th>Year</th><th>Genre</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>@book.PublishedYear</td>
+                <td>@book.Genre</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-sm btn-outline-info">View</a>
+                </td>
+                @if (SignInManager.IsSignedIn(User) & User.IsInRole("Admin"))
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary">Edit</a>
+                        <form asp-action="Delete" asp-route-id="@book.Id" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this book?');">Delete</button>
+                        </form>
+                    </td>
+                }
+
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="/Books/Create" class="btn btn-primary">Add Book</a>

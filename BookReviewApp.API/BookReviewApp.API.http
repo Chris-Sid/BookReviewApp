@@ -1,0 +1,6 @@
+@BookReviewApp.API_HostAddress = http://localhost:5168
+
+GET {{BookReviewApp.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

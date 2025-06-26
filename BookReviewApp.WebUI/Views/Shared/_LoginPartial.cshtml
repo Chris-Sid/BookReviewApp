@@ -1,0 +1,22 @@
+﻿@using BookReviewApp.Entities.Models
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <form asp-action="Logout" asp-controller="Account" method="post" class="form-inline" style="padding-top: 2px;">
+        <span class="navbar-text me-2" style="line-height: 2;">Hello, @User.Identity.Name!</span>
+        <button type="submit" class="btn btn-link nav-link" style="display:inline;line-height: 1;">Logout</button>
+    </form>
+}
+else
+{
+     <li class="nav-item">
+        <a class="nav-link" asp-action="Login" asp-controller="Account">Login</a>
+    </li>
+     <li class="nav-item">
+        <a class="nav-link" asp-action="Register" asp-controller="Account">Register</a>
+    </li>
+}
+ 
