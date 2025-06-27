@@ -13,6 +13,7 @@ namespace BookReviewApp.DataAccess.Interfaces
         Task UpdateVoteAsync(ReviewVote vote);
         Task<bool> HasUserVotedAsync(Guid reviewId, string userId);
         Task AddVoteAsync(ReviewVote vote);
+        Task RemoveVoteAsync(ReviewVote vote);
         Task SaveChangesAsync();
     }
 }

@@ -44,15 +44,16 @@
                 <input type="hidden" name="ReviewId" value="@review.Id" />
                 <input type="hidden" name="IsUpvote" value="true" />
                 <input type="hidden" name="BookID" value="@Model.Id" />
-                <button class="btn btn-sm btn-success" @(hasVoted ? "disabled" : "")>
-                    👍 @(review.Votes?.Count(v => v.IsUpvote) ?? 0)
+                <button type="submit" class="btn btn-sm @(hasVoted == true ? "btn-outline-success" : "btn-success")">
+                    👍 @(review.Votes != null ? review.Votes.Count(v => v.IsUpvote) : 0)
                 </button>
             </form>
             <form asp-action="Vote" asp-controller="Reviews" method="post" class="d-inline">
                 <input type="hidden" name="ReviewId" value="@review.Id" />
                 <input type="hidden" name="IsUpvote" value="false" />
-                <button class="btn btn-sm btn-danger" @(hasVoted ? "disabled" : "")>
-                    👎 @(review.Votes?.Count(v => !v.IsUpvote) ?? 0)
+                <input type="hidden" name="BookID" value="@Model.Id" />
+                <button class="btn btn-sm @(hasVoted == false ? "btn-outline-danger" : "btn-danger")">
+                    👎 @(review.Votes != null ? review.Votes.Count(v => !v.IsUpvote) : 0)
                 </button>
             </form>
         </div>

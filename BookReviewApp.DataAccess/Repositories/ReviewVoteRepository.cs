@@ -42,6 +42,12 @@ namespace BookReviewApp.DataAccess.Repositories
                 .AnyAsync(v => v.ReviewId == reviewId && v.UserId == userId);
         }
 
+        public async Task RemoveVoteAsync(ReviewVote vote)
+        {
+            _context.ReviewVotes.Remove(vote);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

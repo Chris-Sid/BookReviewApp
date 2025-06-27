@@ -84,6 +84,11 @@ namespace BookReviewApp.WebUI.Controllers
 
                 await _voteRepository.AddVoteAsync(vote);
             }
+            else if (existingVote.IsUpvote == isUpvote)
+            {
+                // Same vote clicked again: remove it (toggle off)
+                await _voteRepository.RemoveVoteAsync(existingVote);
+            }
             else if (existingVote.IsUpvote != isUpvote)
             {
                 // Change vote (from like to dislike or vice versa)
@@ -92,9 +97,9 @@ namespace BookReviewApp.WebUI.Controllers
             }
             else
             {
-                // Same vote already exists — do nothing or show message
-                TempData["Message"] = "You already voted the same way.";
-                return RedirectToAction("Details", "Books", new { id = Request.Query["bookId"] });
+                // Change vote
+                existingVote.IsUpvote = isUpvote;
+                await _voteRepository.UpdateVoteAsync(existingVote);
             }
 
             await _voteRepository.SaveChangesAsync();
