@@ -131,9 +131,3 @@ dotnet test
 - XUnit & Moq for unit tests
 
 ---
-
-## 📎 License
-
-MIT License
-
----
