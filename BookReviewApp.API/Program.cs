@@ -118,7 +118,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookReviewApp API V1");
-        c.RoutePrefix = string.Empty; // optional, to serve at root /
+        c.RoutePrefix = "swagger"; // optional, to serve at root /
     });
 }
 app.UseMiddleware<ExceptionMiddleware>();
