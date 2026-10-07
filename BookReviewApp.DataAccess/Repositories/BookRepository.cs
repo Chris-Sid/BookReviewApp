@@ -55,5 +55,33 @@ namespace BookReviewApp.DataAccess.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<PagedResult<Book>> GetPagedAsync(BookQuery query, CancellationToken cancellationToken = default)
+        {
+            var books = _context.Books.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(query.Genre))
+                books = books.Where(b => b.Genre == query.Genre);
+
+            if (query.Year.HasValue)
+                books = books.Where(b => b.PublishedYear == query.Year);
+
+            var totalCount = await books.CountAsync(cancellationToken);
+
+            var items = await books
+                .OrderBy(b => b.Title)
+                .ThenBy(b => b.Id) // tie-breaker keeps paging stable
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToListAsync(cancellationToken);
+
+            return new PagedResult<Book>
+            {
+                Items = items,
+                Page = query.Page,
+                PageSize = query.PageSize,
+                TotalCount = totalCount
+            };
+        }
     }
 }

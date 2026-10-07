@@ -40,5 +40,7 @@ namespace BookReviewApp.Business.Services
         public Task UpdateBookAsync(Book book) => _repo.UpdateAsync(book);
         public Task DeleteBookAsync(Guid Id) => _repo.DeleteAsync(Id);
 
+        public Task<PagedResult<Book>> GetPagedBooksAsync(BookQuery query, CancellationToken cancellationToken = default)
+            => _repo.GetPagedAsync(query, cancellationToken);
     }
 }

@@ -1,78 +1,70 @@
 ﻿@using BookReviewApp.Entities.Models
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<AppUser> SignInManager
-@inject UserManager<AppUser> UserManager
-@model IEnumerable<Book>
+@model PagedResult<Book>
+@{
+    var query = (BookQuery)ViewBag.Query;
+}
+
 <h2>Books</h2>
 
-<form asp-action="Index" method="get" class="row g-3 mb-4">
-    <div class="col">
-        <label>Genre</label>
-        <select name="genre" class="form-select">
-            <option value="">-- All --</option>
-            @foreach (var g in ViewBag.Genres as List<string>)
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input name="genre" value="@query.Genre" class="form-control" placeholder="Genre" />
+    </div>
+    <div class="col-auto">
+        <input name="year" value="@query.Year" type="number" class="form-control" placeholder="Year" />
+    </div>
+    <div class="col-auto">
+        <select name="pageSize" class="form-select" onchange="this.form.submit()">
+            @foreach (var size in new[] { 5, 10, 25, 50 })
             {
-                <option value="@g" selected="@(Context.Request.Query["genre"] == g ? "selected" : null)">@g</option>
+                <option value="@size" selected="@(size == Model.PageSize)">@size per page</option>
             }
         </select>
     </div>
-
-    <div class="col">
-        <label>Year</label>
-        <select name="year" class="form-select">
-            <option value="">-- All --</option>
-            @foreach (var y in ViewBag.Years as List<int>)
-            {
-                <option value="@y" selected="@(Context.Request.Query["year"] == y.ToString() ? "selected" : null)">@y</option>
-            }
-        </select>
-    </div>
-
-    <div class="col">
-        <label>Rating ≥</label>
-        <select name="rating" class="form-select">
-            <option value="">-- All --</option>
-            @foreach (var r in ViewBag.Ratings as List<int>)
-            {
-                <option value="@r" selected="@(Context.Request.Query["rating"] == r.ToString() ? "selected" : null)">@r</option>
-            }
-        </select>
-    </div>
-
-    <div class="col d-flex gap-2 align-items-end">
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a asp-action="Index" class="btn btn-secondary">Reset Filters</a>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Filter</button>
     </div>
 </form>
 
-
 <table class="table">
     <thead>
-        <tr><th>Title</th><th>Author</th><th>Year</th><th>Genre</th></tr>
+        <tr><th>Title</th><th>Author</th><th>Year</th><th>Genre</th><th></th></tr>
     </thead>
     <tbody>
-        @foreach (var book in Model)
+        @foreach (var book in Model.Items)
         {
             <tr>
-                <td>@book.Title</td>
+                <td><a asp-action="Details" asp-route-id="@book.Id">@book.Title</a></td>
                 <td>@book.Author</td>
                 <td>@book.PublishedYear</td>
                 <td>@book.Genre</td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-sm btn-outline-info">View</a>
-                </td>
-                @if (SignInManager.IsSignedIn(User) & User.IsInRole("Admin"))
-                {
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary">Edit</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary btn-sm">Edit</a>
                         <form asp-action="Delete" asp-route-id="@book.Id" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this book?');">Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this book?');">Delete</button>
                         </form>
-                    </td>
-                }
-
+                    }
+                </td>
             </tr>
+        }
+        @if (!Model.Items.Any())
+        {
+            <tr><td colspan="5" class="text-center text-muted">No books found.</td></tr>
         }
     </tbody>
 </table>
-<a href="/Books/Create" class="btn btn-primary">Add Book</a>
+
+<p class="text-muted">
+    Showing @(Model.TotalCount == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1)–@Math.Min(Model.Page * Model.PageSize, Model.TotalCount)
+    of @Model.TotalCount books
+</p>
+
+@await Html.PartialAsync("_Pager", (Model.Page, Model.TotalPages,
+(Func<int, object>)(p => new { page = p, pageSize = Model.PageSize, genre = query.Genre, year = query.Year })))
+
+@if (User.IsInRole("Admin"))
+{
+    <a asp-action="Create" class="btn btn-primary">Add Book</a>
+}

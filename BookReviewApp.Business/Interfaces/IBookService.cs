@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace BookReviewApp.Business.Interfaces
 {
     public interface IBookService
@@ -14,5 +15,6 @@ namespace BookReviewApp.Business.Interfaces
         Task AddBookAsync(Book book);
         Task UpdateBookAsync(Book book);
         Task DeleteBookAsync(Guid Id);
+        Task<PagedResult<Book>> GetPagedBooksAsync(BookQuery query, CancellationToken cancellationToken = default);
     }
 }

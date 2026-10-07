@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BookReviewApp.DataAccess.Interfaces
@@ -15,5 +16,6 @@ namespace BookReviewApp.DataAccess.Interfaces
         Task AddAsync(Book book);
         Task UpdateAsync(Book book);
         Task DeleteAsync(Guid id);
+        Task<PagedResult<Book>> GetPagedAsync(BookQuery query, CancellationToken cancellationToken = default);
     }
 }

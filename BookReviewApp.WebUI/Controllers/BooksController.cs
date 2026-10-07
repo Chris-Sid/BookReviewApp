@@ -18,14 +18,19 @@ namespace BookReviewApp.WebUI.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Index(string? genre, int? year, int? rating)
+        public async Task<IActionResult> Index([FromQuery] BookQuery query, CancellationToken cancellationToken)
         {
-            var allBooks = await _bookService.GetFilteredBooksAsync(genre, year, rating);
-            ViewBag.Genres = allBooks.Select(b => b.Genre).Distinct().OrderBy(g => g).ToList();
-            ViewBag.Years = allBooks.Select(b => b.PublishedYear).Distinct().OrderByDescending(y => y).ToList();
-            ViewBag.Ratings = Enumerable.Range(1, 5).ToList();
+            var result = await _bookService.GetPagedBooksAsync(query, cancellationToken);
 
-            return View(allBooks);
+            // Out-of-range page (e.g. after deleting items): go to the last valid page
+            if (result.TotalPages > 0 && query.Page > result.TotalPages)
+            {
+                query.Page = result.TotalPages;
+                return RedirectToAction(nameof(Index), new { query.Genre, query.Year, query.Page, query.PageSize });
+            }
+
+            ViewBag.Query = query;
+            return View(result);
         }
 
         [AllowAnonymous]

@@ -50,6 +50,20 @@ namespace BookReviewApp.API.Controllers
             await _bookService.AddBookAsync(book);
             return Ok();
         }
+        /// <summary>Returns a page of books, optionally filtered by genre and year.</summary>
+        [HttpGet("paged")]
+        [ProducesResponseType(typeof(PagedResult<Book>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PagedResult<Book>>> GetPaged(
+            [FromQuery] BookQuery query,
+            CancellationToken cancellationToken)
+        {
+            var result = await _bookService.GetPagedBooksAsync(query, cancellationToken);
+
+            Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
+            Response.Headers["X-Total-Pages"] = result.TotalPages.ToString();
+
+            return Ok(result);
+        }
     }
 
 }
