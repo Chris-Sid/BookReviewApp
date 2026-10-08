@@ -74,6 +74,15 @@ namespace BookReviewApp.DataAccess
             new Book { Id = Guid.Parse("ACA4835F-7B6F-495C-9781-FD383E9B8983"), Title = "1984", Author = "George Orwell", PublishedYear = 1949, Genre = "Dystopian" },
             new Book { Id = Guid.Parse("D5FEC283-A357-4C9A-98E0-E59F54889ECD"), Title = "The Hobbit", Author = "J.R.R. Tolkien", PublishedYear = 1937, Genre = "Fantasy" }
             );
+
+            builder.Entity<Book>()
+                .HasIndex(b => new { b.Genre, b.Title, b.Id })
+                .HasDatabaseName("IX_Books_Genre_Title_Id");
+
+            // Serves the unfiltered listing
+            builder.Entity<Book>()
+                .HasIndex(b => new { b.Title, b.Id })
+                .HasDatabaseName("IX_Books_Title_Id");
         }
     }
 }

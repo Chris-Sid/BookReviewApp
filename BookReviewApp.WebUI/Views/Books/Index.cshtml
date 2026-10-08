@@ -1,7 +1,9 @@
-﻿@using BookReviewApp.Entities.Models
-@model PagedResult<Book>
+﻿@using BookReviewApp.DataAccess.Pagination
+@using BookReviewApp.Entities.Models
+@model KeysetPage<Book>
+
 @{
-    var query = (BookQuery)ViewBag.Query;
+    var query = (BookCursorQuery)ViewBag.Query ?? new BookCursorQuery();
 }
 
 <h2>Books</h2>
@@ -57,14 +59,37 @@
 </table>
 
 <p class="text-muted">
-    Showing @(Model.TotalCount == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1)–@Math.Min(Model.Page * Model.PageSize, Model.TotalCount)
-    of @Model.TotalCount books
+    Showing @Model.Items.Count() items (page size @Model.PageSize)
 </p>
 
-@await Html.PartialAsync("_Pager", (Model.Page, Model.TotalPages,
-(Func<int, object>)(p => new { page = p, pageSize = Model.PageSize, genre = query.Genre, year = query.Year })))
+<div class="d-flex justify-content-between">
+    <div>
+        @if (Model.HasPrevious)
+        {
+            <a class="btn btn-outline-secondary"
+               asp-action="Index"
+               asp-route-cursor="@Model.PreviousCursor"
+               asp-route-direction="Previous"
+               asp-route-pageSize="@Model.PageSize"
+               asp-route-genre="@query.Genre"
+               asp-route-year="@query.Year">Previous</a>
+        }
+    </div>
+    <div>
+        @if (Model.HasNext)
+        {
+            <a class="btn btn-outline-primary"
+               asp-action="Index"
+               asp-route-cursor="@Model.NextCursor"
+               asp-route-direction="Next"
+               asp-route-pageSize="@Model.PageSize"
+               asp-route-genre="@query.Genre"
+               asp-route-year="@query.Year">Next</a>
+        }
+    </div>
+</div>
 
 @if (User.IsInRole("Admin"))
 {
-    <a asp-action="Create" class="btn btn-primary">Add Book</a>
+    <a asp-action="Create" class="btn btn-primary mt-3">Add Book</a>
 }

@@ -1,10 +1,8 @@
 ﻿using BookReviewApp.Business.Interfaces;
-using BookReviewApp.DataAccess.Interfaces;
+using BookReviewApp.DataAccess.Pagination;
 using BookReviewApp.Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 
 namespace BookReviewApp.WebUI.Controllers
 {
@@ -17,20 +15,40 @@ namespace BookReviewApp.WebUI.Controllers
             _bookService = bookService;
         }
 
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Index([FromQuery] BookQuery query, CancellationToken cancellationToken)
+        //{
+        //    var result = await _bookService.GetPagedBooksAsync(query, cancellationToken);
+
+        //    // Out-of-range page (e.g. after deleting items): go to the last valid page
+        //    if (result.TotalPages > 0 && query.Page > result.TotalPages)
+        //    {
+        //        query.Page = result.TotalPages;
+        //        return RedirectToAction(nameof(Index), new { query.Genre, query.Year, query.Page, query.PageSize });
+        //    }
+
+        //    ViewBag.Query = query;
+        //    return View(result);
+        //}
+
         [AllowAnonymous]
-        public async Task<IActionResult> Index([FromQuery] BookQuery query, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index([FromQuery] BookCursorQuery query, CancellationToken cancellationToken)
         {
-            var result = await _bookService.GetPagedBooksAsync(query, cancellationToken);
+            // Default page size if not set
+            if (query.PageSize <= 0) query.PageSize = BookQuery.DefaultPageSize;
 
-            // Out-of-range page (e.g. after deleting items): go to the last valid page
-            if (result.TotalPages > 0 && query.Page > result.TotalPages)
+            try
             {
-                query.Page = result.TotalPages;
-                return RedirectToAction(nameof(Index), new { query.Genre, query.Year, query.Page, query.PageSize });
-            }
+                var result = await _bookService.GetKeysetPageAsync(query, cancellationToken);
 
-            ViewBag.Query = query;
-            return View(result);
+                ViewBag.Query = query;
+                return View(result);
+            }
+            catch (InvalidCursorException)
+            {
+                // Tampered or stale cursor (e.g. data-protection keys rotated): restart from page one.
+                return RedirectToAction(nameof(Index), new { query.Genre, query.Year, query.PageSize });
+            }
         }
 
         [AllowAnonymous]

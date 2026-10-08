@@ -2,6 +2,7 @@ using BookReviewApp.Business.Interfaces;
 using BookReviewApp.Business.Services;
 using BookReviewApp.DataAccess;
 using BookReviewApp.DataAccess.Interfaces;
+using BookReviewApp.DataAccess.Pagination;
 using BookReviewApp.DataAccess.Repositories;
 using BookReviewApp.Entities.Models;
 using BookReviewApp.Infrastructure.Middleware;
@@ -33,6 +34,9 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
+
+builder.Services.AddSingleton<IBookCursorCodec, BookCursorCodec>();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;

@@ -11,6 +11,10 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 <PropertyGroup>
   <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -20,6 +24,7 @@
     <ProjectReference Include="..\BookReviewApp.Business\BookReviewApp.Business.csproj" />
     <ProjectReference Include="..\BookReviewApp.Contracts\BookReviewApp.Contracts.csproj" />
     <ProjectReference Include="..\BookReviewApp.Infrastructure\BookReviewApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\BookReviewApp.WebUI\BookReviewApp.WebUI.csproj" />
   </ItemGroup>
 
 </Project>

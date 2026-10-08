@@ -1,6 +1,7 @@
 ﻿using BookReviewApp.Business.Interfaces;
 using BookReviewApp.Contracts.DTOs;
 using BookReviewApp.Contracts.Models;
+using BookReviewApp.DataAccess.Pagination;
 using BookReviewApp.Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +64,24 @@ namespace BookReviewApp.API.Controllers
             Response.Headers["X-Total-Pages"] = result.TotalPages.ToString();
 
             return Ok(result);
+        }
+        /// <summary>Cursor-based (keyset) listing, suited to large datasets.</summary>
+        /// <remarks>Pass <c>nextCursor</c> or <c>previousCursor</c> from the previous response as <c>cursor</c>.</remarks>
+        [HttpGet("cursor")]
+        [ProducesResponseType(typeof(KeysetPage<Book>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<KeysetPage<Book>>> GetByCursor(
+            [FromQuery] BookCursorQuery query,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                return Ok(await _bookService.GetKeysetPageAsync(query, cancellationToken));
+            }
+            catch (InvalidCursorException ex)
+            {
+                return Problem(detail: ex.Message, statusCode: StatusCodes.Status400BadRequest);
+            }
         }
     }
 

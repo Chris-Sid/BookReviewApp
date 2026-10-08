@@ -17,5 +17,6 @@ namespace BookReviewApp.DataAccess.Interfaces
         Task UpdateAsync(Book book);
         Task DeleteAsync(Guid id);
         Task<PagedResult<Book>> GetPagedAsync(BookQuery query, CancellationToken cancellationToken = default);
+        Task<KeysetPage<Book>> GetKeysetPageAsync(BookCursorQuery query, CancellationToken cancellationToken = default);
     }
 }

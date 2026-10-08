@@ -1,0 +1,19 @@
+@using BookReviewApp.Entities.Models
+@model (KeysetPage<Book> Page, string? Genre, int? Year)
+
+<nav aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item @(Model.Page.HasPrevious ? "" : "disabled")">
+            <a class="page-link" asp-action="Index"
+               asp-route-cursor="@Model.Page.PreviousCursor" asp-route-direction="Previous"
+               asp-route-genre="@Model.Genre" asp-route-year="@Model.Year"
+               asp-route-pageSize="@Model.Page.PageSize">Previous</a>
+        </li>
+        <li class="page-item @(Model.Page.HasNext ? "" : "disabled")">
+            <a class="page-link" asp-action="Index"
+               asp-route-cursor="@Model.Page.NextCursor" asp-route-direction="Next"
+               asp-route-genre="@Model.Genre" asp-route-year="@Model.Year"
+               asp-route-pageSize="@Model.Page.PageSize">Next</a>
+        </li>
+    </ul>
+</nav>

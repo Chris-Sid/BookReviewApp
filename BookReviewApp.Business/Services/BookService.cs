@@ -42,5 +42,8 @@ namespace BookReviewApp.Business.Services
 
         public Task<PagedResult<Book>> GetPagedBooksAsync(BookQuery query, CancellationToken cancellationToken = default)
             => _repo.GetPagedAsync(query, cancellationToken);
+
+        public Task<KeysetPage<Book>> GetKeysetPageAsync(BookCursorQuery query, CancellationToken cancellationToken = default)
+            => _repo.GetKeysetPageAsync(query, cancellationToken);
     }
 }

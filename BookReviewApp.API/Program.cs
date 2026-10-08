@@ -1,131 +1,110 @@
 using BookReviewApp.Business.Interfaces;
 using BookReviewApp.Business.Services;
-using BookReviewApp.Contracts.Models;
 using BookReviewApp.DataAccess;
 using BookReviewApp.DataAccess.Interfaces;
+using BookReviewApp.DataAccess.Pagination;
 using BookReviewApp.DataAccess.Repositories;
 using BookReviewApp.Entities.Models;
 using BookReviewApp.Infrastructure.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BookReviewApp.WebUI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using System.Text;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+builder.Services.AddHttpClient("Api", client =>
 {
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath); // for XML comments on controllers/models
-
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BookReviewApp API", Version = "v1" });
-
-    //  Add JWT support
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Id = "Bearer",
-                    Type = ReferenceType.SecurityScheme
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+    client.BaseAddress = new Uri("https://localhost:7141/");
 });
 var connectionString = Environment.GetEnvironmentVariable("BOOKREVIEW_DB_CONNECTION");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString ??
                       throw new InvalidOperationException("DB connection string not set")));
 
-builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();
+
 builder.Services.AddIdentity<AppUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-//ENviroment Variables
-var jwtSettings = new JwtSettings
+
+builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
+
+builder.Services.AddSingleton<IBookCursorCodec, BookCursorCodec>();
+
+builder.Services.Configure<IdentityOptions>(options =>
 {
-    Issuer = Environment.GetEnvironmentVariable("BookAPP_JWT_ISSUER"),
-    Audience = Environment.GetEnvironmentVariable("BookAPP_JWT_AUDIENCE"),
-    Key = Environment.GetEnvironmentVariable("BookAPP_JWT_KEY"),
-    ExpiryMinutes = int.TryParse(Environment.GetEnvironmentVariable("BookAPP_JWT_EXPIRY_MINUTES"), out var minutes) ? minutes : 60
-};
-builder.Services.Configure<JwtSettings>(options =>
-{
-    options.Issuer = jwtSettings.Issuer;
-    options.Audience = jwtSettings.Audience;
-    options.Key = jwtSettings.Key;
-    options.ExpiryMinutes = jwtSettings.ExpiryMinutes;
+    options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
 });
 
-builder.Services.AddAuthentication(options =>
+builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
 
-
-.AddJwtBearer(options =>
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    options.IncludeErrorDetails = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
-    };
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BookReviewApp API", Version = "v1" });
+
+    // Include XML comments if you generate them
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        c.IncludeXmlComments(xmlPath);
+
+    // (Optional) configure JWT/security here if needed
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+
+    // --- Swagger middleware (Development only) ---
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookReviewApp API v1");
+        c.RoutePrefix = "swagger"; // default; keeps URL at /swagger/index.html
+    });
+    // --- end Swagger middleware ---
+}
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Books}/{action=Index}/{id?}");
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+    await SeedData.InitializeAsync(app.Services);
 }
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookReviewApp API V1");
-        c.RoutePrefix = "swagger"; // optional, to serve at root /
-    });
+    app.UseDeveloperExceptionPage(); // Shows full error with stacktrace
+}
+else
+{
+    // For Production – Use error boundary
+    app.UseExceptionHandler("/Home/Error"); // Redirects on unhandled exceptions
+    app.UseHsts();
 }
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseHttpsRedirection();
-
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
-
+app.MapRazorPages();
 app.Run();

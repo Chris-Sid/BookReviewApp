@@ -1,4 +1,5 @@
 ﻿using BookReviewApp.DataAccess.Interfaces;
+using BookReviewApp.DataAccess.Pagination;
 using BookReviewApp.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,7 +13,13 @@ namespace BookReviewApp.DataAccess.Repositories
     public class BookRepository : IBookRepository
     {
         private readonly AppDbContext _context;
-        public BookRepository(AppDbContext context) => _context = context;
+        private readonly IBookCursorCodec _cursorCodec;
+
+        public BookRepository(AppDbContext context, IBookCursorCodec cursorCodec)
+        {
+            _context = context;
+            _cursorCodec = cursorCodec;
+        }
 
         public async Task<List<Book>> GetAllAsync(string? genre, int? year)
         {
@@ -83,5 +90,71 @@ namespace BookReviewApp.DataAccess.Repositories
                 TotalCount = totalCount
             };
         }
+
+        public async Task<KeysetPage<Book>> GetKeysetPageAsync(BookCursorQuery query, CancellationToken cancellationToken = default)
+        {
+            var cursor = _cursorCodec.Decode(query.Cursor);
+
+            // A backward request without a cursor is meaningless; treat it as the first page.
+            var forward = cursor is null || query.Direction == PageDirection.Next;
+
+            var books = ApplyFilters(_context.Books.AsNoTracking(), query.Genre, query.Year);
+
+            if (cursor is not null)
+            {
+                var (title, id) = cursor;
+
+                // Seek predicate: translates to an index range scan, not a row skip.
+                books = forward
+                    ? books.Where(b => string.Compare(b.Title, title) > 0 ||
+                                       (b.Title == title && b.Id.CompareTo(id) > 0))
+                    : books.Where(b => string.Compare(b.Title, title) < 0 ||
+                                       (b.Title == title && b.Id.CompareTo(id) < 0));
+            }
+
+            var ordered = forward
+                ? books.OrderBy(b => b.Title).ThenBy(b => b.Id)
+                : books.OrderByDescending(b => b.Title).ThenByDescending(b => b.Id);
+
+            // Fetch one extra row to learn whether another page exists, with no COUNT(*).
+            var rows = await ordered.Take(query.PageSize + 1).ToListAsync(cancellationToken);
+
+            var hasMore = rows.Count > query.PageSize;
+            if (hasMore) rows.RemoveAt(query.PageSize);
+            if (!forward) rows.Reverse();
+
+            if (rows.Count == 0)
+            {
+                return new KeysetPage<Book> { PageSize = query.PageSize };
+            }
+
+            // Moving forward: more rows ahead = hasMore, and we came from somewhere if a cursor was supplied.
+            // Moving backward: the mirror image.
+            var hasNext = forward ? hasMore : true;
+            var hasPrevious = forward ? cursor is not null : hasMore;
+
+            return new KeysetPage<Book>
+            {
+                Items = rows,
+                PageSize = query.PageSize,
+                HasNext = hasNext,
+                HasPrevious = hasPrevious,
+                NextCursor = hasNext ? _cursorCodec.Encode(ToCursor(rows[^1])) : null,
+                PreviousCursor = hasPrevious ? _cursorCodec.Encode(ToCursor(rows[0])) : null
+            };
+        }
+
+        private static IQueryable<Book> ApplyFilters(IQueryable<Book> books, string? genre, int? year)
+        {
+            if (!string.IsNullOrWhiteSpace(genre))
+                books = books.Where(b => b.Genre == genre);
+
+            if (year.HasValue)
+                books = books.Where(b => b.PublishedYear == year);
+
+            return books;
+        }
+
+        private static BookCursor ToCursor(Book book) => new(book.Title, book.Id);
     }
 }

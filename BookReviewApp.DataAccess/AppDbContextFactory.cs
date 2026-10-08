@@ -1,11 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.IO;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookReviewApp.DataAccess
 {
@@ -15,15 +12,18 @@ namespace BookReviewApp.DataAccess
         {
             var basePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "BookReviewApp.API"));
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(basePath) // Ensure SetBasePath is accessible
-                .AddJsonFile("appsettings.json")
-                .Build();  
+                .SetBasePath(basePath)
+                .AddJsonFile("appsettings.json", optional: true)
+                .Build();
 
+            // Prefer environment variable (same as Program.cs), then appsettings.json fallback
+            var connectionString = Environment.GetEnvironmentVariable("BOOKREVIEW_DB_CONNECTION")
+                                   ?? configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Connection string not found. Set BOOKREVIEW_DB_CONNECTION or DefaultConnection in appsettings.json.");
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
