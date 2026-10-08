@@ -9,6 +9,7 @@ An ASP.NET Core 9 web application that allows users to register/login, view/mana
 
 - 🔐 User registration & login (ASP.NET Identity)
 - 📘 Book and review management (MVC + Razor Views)
+- 📘 Books Pagination (Keyset)
 - 👍👎 One vote per review per user
 - ⚙️ RESTful API for books & reviews
 - 🧪 Unit tested services & repositories
