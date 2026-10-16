@@ -104,6 +104,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("Client", policy => policy
+//        .WithOrigins("https://your-client-origin")
+//        .AllowAnyHeader()
+//        .AllowAnyMethod()
+//        .WithExposedHeaders("X-Total-Count", "X-Total-Pages"));
+//});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
