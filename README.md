@@ -24,7 +24,7 @@ An ASP.NET Core 9 web application that allows users to register/login, view/mana
 - [.NET 9 SDK](https://dotnet.microsoft.com)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - Optional: [Postman](https://www.postman.com/) for API testing
-
+- Node JS : download and install LTS
 ---
 
 ### 🐳 Start PostgreSQL with Docker
@@ -83,6 +83,19 @@ Example:
 Bearer eyJhbGciOiJIUzI1NiIsInR5cCI...
 ```
 
+---
+---
+You need to Run Vite when launching the APP so on powershell type: 
+Set-Location D:\Documents\BookReviewApp\bookreview-client
+npm.cmd run dev
+---
+---
+Install node.js then On PowerShell Visual Studio on Project Directory :
+npm.cmd create vite@latest bookreview-client -- --template react-ts
+Set-Location .\bookreview-client
+npm.cmd install
+npm.cmd i @tanstack/react-query
+npm.cmd run dev
 ---
 
 ## 📫 API Endpoints Overview
