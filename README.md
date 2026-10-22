@@ -25,6 +25,13 @@ An ASP.NET Core 9 web application that allows users to register/login, view/mana
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - Optional: [Postman](https://www.postman.com/) for API testing
 - Node JS : download and install LTS
+
+- Install node.js then On PowerShell Visual Studio on Project Directory :
+npm.cmd create vite@latest bookreview-client -- --template react-ts
+Set-Location .\bookreview-client
+npm.cmd install
+npm.cmd i @tanstack/react-query
+npm.cmd run dev
 ---
 
 ### 🐳 Start PostgreSQL with Docker
