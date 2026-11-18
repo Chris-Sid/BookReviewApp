@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useBooks } from '../hooks/useBooks';
+import { useBookReviews } from '../hooks/useBookReviews';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { BookCard } from './BookCard';
 import { Pagination } from './Pagination';
@@ -28,11 +29,11 @@ export function BookList() {
         type="search"
         value={genreInput}
         onChange={(e) => handleGenreChange(e.target.value)}
-        placeholder="Filter by genre…"
+        placeholder="Filter by genre"
         aria-label="Filter by genre"
       />
 
-      {isPending && <p role="status">Loading books…</p>}
+      {isPending && <p role="status">Loading books</p>}
 
       {isError && (
         <div role="alert">
@@ -65,4 +66,35 @@ export function BookList() {
       )}
     </section>
   );
+}
+
+export function ReviewList({ bookId }: { bookId: string }) {
+    const { data, isPending, isError, error, refetch } = useBookReviews(bookId, true);
+
+    if (isPending) return <p role="status">Loading reviews...</p>;
+
+    if (isError) {
+        return (
+            <div role="alert">
+                <p>{error.message}</p>
+                <button type="button" onClick={() => refetch()}>Retry</button>
+            </div>
+        );
+    }
+
+    if (data.length === 0) return <p>No reviews yet.</p>;
+
+    return (
+        <ul className="review-list">
+            {data.map((r) => (
+                <li key={r.id}>
+                    <strong>{'*'.repeat(r.rating)}</strong> ({r.rating}/5)
+                    <p>{r.content}</p>
+                    <small>
+                        {r.userName ?? 'Anonymous'} - {new Date(r.dateCreated).toLocaleDateString()}
+                    </small>
+                </li>
+            ))}
+        </ul>
+    );
 }

@@ -109,3 +109,25 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.book-card-toggle {
+  all: unset;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+}
+.book-card-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.reviews {
+  margin-top: 0.75rem;
+  border-top: 1px solid #ddd;
+  padding-top: 0.5rem;
+}
+.review-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}

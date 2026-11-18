@@ -9,6 +9,7 @@ using BookReviewApp.Infrastructure.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -59,7 +60,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString ??
                       throw new InvalidOperationException("DB connection string not set")));
 
-builder.Services.AddScoped<IBookService, BookService>();
+var redisConnection = Environment.GetEnvironmentVariable("BOOKREVIEW_REDIS_CONNECTION");
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(o =>
+    {
+        o.Configuration = redisConnection;
+        o.InstanceName = "BookReviewApp:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache(); // fallback for local dev
+}
+
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<CachedBookService>(sp => new CachedBookService(
+    sp.GetRequiredService<IDistributedCache>(),
+    sp.GetRequiredService<BookService>()));
+builder.Services.AddScoped<IBookService>(sp => sp.GetRequiredService<CachedBookService>());
+
+builder.Services.AddCors(o => o.AddPolicy("react", p =>
+    p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewVoteRepository, ReviewVoteRepository>();

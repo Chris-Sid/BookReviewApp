@@ -1,4 +1,4 @@
-import type { Book, BookQuery, PagedResult } from '../types/book';
+import type { Book, BookQuery, PagedResult, Review } from '../types/book';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -22,4 +22,12 @@ export async function fetchBooks(
     throw new ApiError(response.status, `Failed to load books (${response.status})`);
   }
   return response.json() as Promise<PagedResult<Book>>;
+}
+
+export async function fetchBookReviews(bookId: string, signal?: AbortSignal): Promise<Review[]> {
+    const response = await fetch(`/api/books/${bookId}/reviews`, { signal });
+    if (!response.ok) {
+        throw new ApiError(response.status, `Failed to load reviews (${response.status})`);
+    }
+    return response.json() as Promise<Review[]>;
 }

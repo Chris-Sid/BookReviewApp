@@ -1,6 +1,7 @@
 ﻿using BookReviewApp.Business.Interfaces;
 using BookReviewApp.Contracts.DTOs;
 using BookReviewApp.Contracts.Models;
+using BookReviewApp.DataAccess.Services;
 using BookReviewApp.Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,22 @@ namespace BookReviewApp.API.Controllers
 
             return Ok(result);
         }
+
+
+        /// <summary>Returns the reviews of a single book, newest first.</summary>
+        [HttpGet("{id:guid}/reviews")]
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetReviews(Guid id)
+        {
+            var book = await _bookService.GetBookAsync(id);
+            if (book is null) return NotFound();
+
+            var reviews = (book.Reviews ?? [])
+                .OrderByDescending(r => r.DateCreated)
+                .Select(r => new ReviewDTO1(r.Id, r.Content, r.Rating, r.DateCreated, r.User?.UserName));
+
+            return Ok(reviews);
+        }
+
     }
 
 }

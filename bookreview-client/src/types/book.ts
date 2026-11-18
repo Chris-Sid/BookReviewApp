@@ -22,3 +22,11 @@ export interface BookQuery {
   page: number;
   pageSize: number;
 }
+
+export interface Review {
+    id: string;
+    content: string;
+    rating: number;
+    dateCreated: string;
+    userName: string | null;
+}

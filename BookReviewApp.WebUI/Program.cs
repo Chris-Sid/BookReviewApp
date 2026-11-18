@@ -38,6 +38,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
 });
 
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.AccessDeniedPath = "/Account/AccessDenied";
