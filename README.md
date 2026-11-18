@@ -104,6 +104,10 @@ npm.cmd install
 npm.cmd i @tanstack/react-query
 npm.cmd run dev
 ---
+In order react - tanstack query to work on 
+Powershell :
+cd D:\Documents\BookReviewApp\bookreview-client
+PS D:\Documents\BookReviewApp\bookreview-client> npm.cmd run dev
 
 ## 📫 API Endpoints Overview
 
